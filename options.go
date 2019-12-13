@@ -1,7 +1,7 @@
 package minisentinel
 
 import (
-	"github.com/alicebob/miniredis"
+	"github.com/alicebob/miniredis/v2"
 )
 
 // Option - how Options are passed as arguments

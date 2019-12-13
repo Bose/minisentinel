@@ -3,7 +3,7 @@ package minisentinel
 import (
 	"testing"
 
-	"github.com/alicebob/miniredis"
+	"github.com/alicebob/miniredis/v2"
 	"github.com/matryer/is"
 
 	"github.com/gomodule/redigo/redis"
