@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/alicebob/miniredis"
-	"github.com/alicebob/miniredis/server"
+	"github.com/alicebob/miniredis/v2"
+	"github.com/alicebob/miniredis/v2/server"
 )
 
 func errWrongNumber(cmd string) string {
