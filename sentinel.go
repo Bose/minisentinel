@@ -26,6 +26,8 @@ type Sentinel struct {
 	replicaInfo  ReplicaInfo
 	replica      *miniredis.Miniredis
 	sentinelInfo SentinelInfo
+
+	cmdHandler map[string]func(*server.Peer, string, []string) error
 }
 
 // SentinelInfo - define a redis sentinel
@@ -62,9 +64,11 @@ func NewSentinel(master *miniredis.Miniredis, opts ...Option) *Sentinel {
 	if o.replica != nil {
 		s.replica = o.replica
 	}
-	s.MasterInfo(opts...)  // init and return masterInfo
-	s.ReplicaInfo(opts...) // init/return replicaInfo
+	s.MasterInfo(opts...)   // init and return masterInfo
+	s.ReplicaInfo(opts...)  // init/return replicaInfo
 	s.SentinelInfo(opts...) // init/return sentinelInfo
+
+	initSentinelCmdHandler(&s)
 	return &s
 }
 
@@ -251,3 +255,4 @@ func initSentinelInfo(s *Sentinel, opts ...Option) SentinelInfo {
 	}
 	return s.sentinelInfo
 }
+

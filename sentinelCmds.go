@@ -14,6 +14,15 @@ func commandsSentinel(s *Sentinel) {
 	s.srv.Register("SENTINEL", s.cmdsSentinel)
 }
 
+func initSentinelCmdHandler(s *Sentinel) {
+	s.cmdHandler = map[string]func(*server.Peer, string, []string) error{
+		"MASTERS":                 s.mastersCommand,
+		"GET-MASTER-ADDR-BY-NAME": s.getMasterAddrByNameCommand,
+		"SLAVES":                  s.slavesCommand,
+		"SENTINELS":               s.sentinelsCommand,
+	}
+}
+
 // cmdsSentinel - entry point for all commands that start with SENTINEL
 func (s *Sentinel) cmdsSentinel(c *server.Peer, cmd string, args []string) {
 	if !isSentinelCmd(cmd) {
@@ -29,41 +38,15 @@ func (s *Sentinel) cmdsSentinel(c *server.Peer, cmd string, args []string) {
 	}
 	subCmd := strings.ToUpper(args[0])
 
-	if subCmd == "MASTERS" {
-		err := s.mastersCommand(c, cmd, args)
-		if err != nil {
-			c.WriteError(err.Error())
-		}
+	cmdFn, ok := s.cmdHandler[subCmd]
+	if !ok {
+		c.WriteError(fmt.Sprintf(msgInvalidSentinelCommand, subCmd))
 		return
 	}
-
-	if subCmd == "GET-MASTER-ADDR-BY-NAME" {
-		err := s.getMasterAddrByNameCommand(c, cmd, args)
-		if err != nil {
-			c.WriteError(err.Error())
-		}
-		return
+	err := cmdFn(c, cmd, args)
+	if err != nil {
+		c.WriteError(err.Error())
 	}
-
-	if subCmd == "SLAVES" {
-		err := s.slavesCommand(c, cmd, args)
-		if err != nil {
-			c.WriteError(err.Error())
-		}
-		return
-	}
-
-	if subCmd == "SENTINELS" {
-		err := s.sentinelsCommand(c, cmd, args)
-		if err != nil {
-			c.WriteError(err.Error())
-		}
-		return
-	}
-	
-	c.WriteError(fmt.Sprintf(msgInvalidSentinelCommand, subCmd))
-	return
-
 }
 
 func (s *Sentinel) getMasterAddrByNameCommand(c *server.Peer, cmd string, args []string) error {
