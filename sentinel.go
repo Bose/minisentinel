@@ -64,6 +64,7 @@ func NewSentinel(master *miniredis.Miniredis, opts ...Option) *Sentinel {
 	}
 	s.MasterInfo(opts...)  // init and return masterInfo
 	s.ReplicaInfo(opts...) // init/return replicaInfo
+	s.SentinelInfo(opts...) // init/return sentinelInfo
 	return &s
 }
 
