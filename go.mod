@@ -1,4 +1,4 @@
-module github.com/Bose/minisentinel
+module github.com/house-lee/minisentinel
 
 go 1.12
 
