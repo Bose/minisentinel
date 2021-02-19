@@ -52,6 +52,15 @@ func (s *Sentinel) cmdsSentinel(c *server.Peer, cmd string, args []string) {
 		}
 		return
 	}
+
+	if subCmd == "SENTINELS" {
+		err := s.sentinelsCommand(c, cmd, args)
+		if err != nil {
+			c.WriteError(err.Error())
+		}
+		return
+	}
+	
 	c.WriteError(fmt.Sprintf(msgInvalidSentinelCommand, subCmd))
 	return
 
@@ -110,6 +119,31 @@ func (s *Sentinel) mastersCommand(c *server.Peer, cmd string, args []string) err
 	c.WriteLen(40)
 	t := reflect.TypeOf(s.masterInfo)
 	v := reflect.ValueOf(s.masterInfo)
+
+	// Iterate over all available fields and read the tag value
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag.Get("mapstructure")
+		c.WriteBulk(tag)
+		c.WriteBulk(v.Field(i).Interface().(string))
+	}
+
+	return nil
+}
+
+func (s *Sentinel) sentinelsCommand(c *server.Peer, cmd string, args []string) error {
+	if !isSentinelCmd(cmd) {
+		return fmt.Errorf(msgInvalidSentinelCommand, cmd)
+	}
+	subCmd := strings.ToUpper(args[0])
+	if subCmd != "SENTINELS" {
+		return fmt.Errorf(msgInvalidSentinelCommand, subCmd)
+	}
+	t := reflect.TypeOf(s.sentinelInfo)
+	v := reflect.ValueOf(s.sentinelInfo)
+
+	c.WriteLen(1)
+	c.WriteLen(t.NumField())
 
 	// Iterate over all available fields and read the tag value
 	for i := 0; i < t.NumField(); i++ {
