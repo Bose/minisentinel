@@ -76,3 +76,21 @@ func TestGetMasterAddrByName(t *testing.T) {
 		is.Equal(results[1], m.Port())
 	}
 }
+func TestSentinels(t *testing.T) {
+	is := is.New(t)
+	m, s, c := testSetup(t)
+	defer m.Close()
+	defer s.Close()
+	// SENTINELS command
+	{
+		results, err := c.Do("SENTINEL", "SENTINELS", "MYMASTER")
+		is.NoErr(err)
+		info, err := redis.Strings(results.([]interface{})[0], nil)
+		sInfo, err := NewSentinelInfoFromStrings(info)
+		is.NoErr(err)
+		is.Equal(sInfo.Name, "sentinel-mymaster")
+		is.Equal(sInfo.Port, s.Port())
+		is.Equal(sInfo.IP, m.Host())
+		is.Equal(sInfo.Flags, "sentinel")
+	}
+}

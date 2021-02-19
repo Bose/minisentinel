@@ -122,8 +122,9 @@ func (s *Sentinel) sentinelsCommand(c *server.Peer, cmd string, args []string) e
 	if subCmd != "SENTINELS" {
 		return fmt.Errorf(msgInvalidSentinelCommand, subCmd)
 	}
-	t := reflect.TypeOf(s.sentinelInfo)
-	v := reflect.ValueOf(s.sentinelInfo)
+	sentinelInfo := s.SentinelInfo()
+	t := reflect.TypeOf(sentinelInfo)
+	v := reflect.ValueOf(sentinelInfo)
 
 	c.WriteLen(1)
 	c.WriteLen(t.NumField())
