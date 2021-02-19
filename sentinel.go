@@ -1,10 +1,12 @@
 package minisentinel
 
 import (
+	"errors"
 	"fmt"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/alicebob/miniredis/v2/server"
 	"github.com/google/uuid"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -238,7 +240,7 @@ func setAuthenticated(c *server.Peer) {
 func initSentinelInfo(s *Sentinel, opts ...Option) SentinelInfo {
 	o := GetOpts(opts...)
 	s.sentinelInfo = SentinelInfo{
-		Name:                  o.masterName,
+		Name:                  fmt.Sprintf("sentinel-%s",o.masterName),
 		IP:                    s.master.Host(),
 		Port:                  strconv.Itoa(s.port),
 		RunID:                 uuid.New().String(),
@@ -256,3 +258,32 @@ func initSentinelInfo(s *Sentinel, opts ...Option) SentinelInfo {
 	return s.sentinelInfo
 }
 
+// NewSentinelInfoFromStrings creates a new SentinelInfo
+func NewSentinelInfoFromStrings(s []string) (SentinelInfo, error) {
+	m := SentinelInfo{}
+	if len(s)%2 != 0 {
+		return m, errors.New("[]strings not a modulus of 2")
+	}
+
+	t := reflect.TypeOf(m)
+	v := reflect.ValueOf(&m)
+
+	// Iterate over all available fields and read the tag value
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag.Get("mapstructure")
+		// find the tag in s []string
+		for si, sv := range s {
+			if si%2 != 0 {
+				continue
+			}
+			if sv == tag {
+				if len(s) >= si+1 {
+					v.Elem().Field(i).SetString(s[si+1])
+				}
+				break
+			}
+		}
+	}
+	return m, nil
+}
