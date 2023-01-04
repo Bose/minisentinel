@@ -36,8 +36,9 @@ type connCtx struct {
 func NewSentinel(master *miniredis.Miniredis, opts ...Option) *Sentinel {
 	s := Sentinel{}
 	s.signal = sync.NewCond(&s)
-	o := GetOpts(opts...)
-	s.master = master
+	o := GetOpts(append([]Option{WithMaster(master)}, opts...)...)
+
+	s.master = o.master
 	s.replica = o.master // set a reasonable default
 
 	if o.replica != nil {
@@ -70,7 +71,7 @@ func (s *Sentinel) Replica() *miniredis.Miniredis {
 
 // Run creates and Start()s a Sentinel.
 func Run(master *miniredis.Miniredis, opts ...Option) (*Sentinel, error) {
-	s := NewSentinel(master)
+	s := NewSentinel(master, opts...)
 	return s, s.Start()
 }
 
